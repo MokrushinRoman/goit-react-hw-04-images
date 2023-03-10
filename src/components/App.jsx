@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import {
   GlobalStyles,
@@ -11,31 +11,29 @@ import {
 import { fetchImages } from 'services';
 import { errorToast } from 'helpers';
 
-export class App extends Component {
-  state = {
-    query: '',
-    isLoading: false,
-    images: [],
-    page: 1,
-    totalImages: null,
-  };
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalImages, setTotalImages] = useState(null);
 
-  async componentDidUpdate(_, prevState) {
-    const { query: currQuery, page: currPage } = this.state;
+  useEffect(() => {
+    if (query === '') {
+      return;
+    }
 
-    if (prevState.query !== currQuery || prevState.page !== currPage) {
-      this.setState({ isLoading: true });
+    setIsLoading(true);
 
+    const fetchData = async () => {
       try {
         const { hits: incomeImages, totalHits: totalImages } =
-          await fetchImages(currQuery, currPage);
+          await fetchImages(query, page);
         if (totalImages < 1) {
           errorToast('Nothing was found... Try againe');
         } else {
-          this.setState(prevState => ({
-            images: [...prevState.images, ...incomeImages],
-            totalImages,
-          }));
+          setImages(prevImages => [...prevImages, ...incomeImages]);
+          setTotalImages(totalImages);
         }
       } catch (error) {
         errorToast(
@@ -43,49 +41,43 @@ export class App extends Component {
         );
         console.error(error.message);
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       }
-    }
-  }
+    };
 
-  onFormSubmit = query => {
-    if (query === this.state.query) {
+    fetchData();
+  }, [page, query]);
+
+  const onFormSubmit = incomingQuery => {
+    if (incomingQuery === query) {
       return;
     }
 
-    this.setState({
-      query,
-      images: [],
-      page: 1,
-      totalImages: null,
-    });
+    setQuery(incomingQuery);
+    setImages([]);
+    setPage(1);
+    setTotalImages(null);
   };
 
-  onLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const onLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  render() {
-    const { images, totalImages, isLoading } = this.state;
-
-    return (
-      <>
-        <Toaster />
-        <GlobalStyles />
-        <header className="header">
-          <Searchbar onFormSubmit={this.onFormSubmit} />
-        </header>
-        <main>
-          <Layout>
-            <h1 className="visually-hidden">Image-finder</h1>
-            <ImageGallry images={images} />
-            {images.length < totalImages && (
-              <Button loadMore={this.onLoadMore} />
-            )}
-            {isLoading && <Loader />}
-          </Layout>
-        </main>
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Toaster />
+      <GlobalStyles />
+      <header className="header">
+        <Searchbar onFormSubmit={onFormSubmit} />
+      </header>
+      <main>
+        <Layout>
+          <h1 className="visually-hidden">Image-finder</h1>
+          <ImageGallry images={images} />
+          {images.length < totalImages && <Button loadMore={onLoadMore} />}
+          {isLoading && <Loader />}
+        </Layout>
+      </main>
+    </>
+  );
+};
