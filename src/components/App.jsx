@@ -17,21 +17,17 @@ export const App = () => {
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
   const [totalImages, setTotalImages] = useState(null);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const abotrController = new AbortController();
-
     if (query === '') {
       return;
     }
 
-    setError(null);
     setIsLoading(true);
     async function getImages() {
       try {
         const { hits: incomeImages, totalHits: totalImages } =
-          await fetchImages(query, page, abotrController);
+          await fetchImages(query, page);
         if (totalImages < 1) {
           errorToast('Nothing was found... Try againe');
         } else {
@@ -39,7 +35,9 @@ export const App = () => {
           setTotalImages(totalImages);
         }
       } catch (error) {
-        setError(error);
+        errorToast(
+          'Something went wrong... Please try againe later and check error type in console!'
+        );
         console.error(error.message);
       } finally {
         setIsLoading(false);
@@ -47,10 +45,6 @@ export const App = () => {
     }
 
     getImages();
-
-    return () => {
-      abotrController.abort();
-    };
   }, [page, query]);
 
   const onFormSubmit = incomingQuery => {
@@ -62,7 +56,6 @@ export const App = () => {
     setImages([]);
     setPage(1);
     setTotalImages(null);
-    setError(null);
   };
 
   const onLoadMore = () => {
@@ -82,10 +75,6 @@ export const App = () => {
           <ImageGallry images={images} />
           {images.length < totalImages && <Button loadMore={onLoadMore} />}
           {isLoading && <Loader />}
-          {error &&
-            errorToast(
-              'Something went wrong... Please try againe later and check error type in console!'
-            )}
         </Layout>
       </main>
     </>

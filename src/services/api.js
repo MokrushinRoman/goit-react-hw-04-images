@@ -11,9 +11,7 @@ axios.defaults.params = {
   image_type: 'photo',
 };
 
-export const fetchImages = async (query, page, controller) => {
-  const { data } = await axios.get(`?q=${query}&page=${page}`, {
-    signal: controller.signal,
-  });
+export const fetchImages = async (query, page) => {
+  const { data } = await axios.get(`?q=${query}&page=${page}`);
   return data;
 };

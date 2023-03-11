@@ -24,9 +24,7 @@ export const ImageGalleryItem = ({
     <>
       <Image src={webformatURL} alt={tags} onClick={handleOpenModal} />
       {isModalOpen && (
-        <Modal closeModal={handleCloseModal}>
-          <img src={largeImageURL} alt={tags} />
-        </Modal>
+        <Modal closeModal={handleCloseModal} src={largeImageURL} alt={tags} />
       )}
     </>
   );
